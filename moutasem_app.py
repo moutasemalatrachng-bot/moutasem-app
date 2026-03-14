@@ -11,15 +11,15 @@ st.set_page_config(page_title="Organize Your Time", page_icon="🌟", layout="ce
 if 'my_tasks' not in st.session_state: st.session_state.my_tasks = []
 if 'achievements' not in st.session_state: st.session_state.achievements = []
 if 'habits' not in st.session_state: 
-    st.session_state.habits = {"Water 💧": False, "Reading 📖": False, "Exercise 🏃‍♂️": False, "Prayer ✨": False}
+    st.session_state.habits = {"Water/ماء 💧": False, "Reading/قراءة 📖": False, "Exercise/رياضة 🏃‍♂️": False, "Prayer/صلاة ✨": False}
 
-# --- 2. التحية الذكية العامة ---
+# --- 2. التحية الذكية باللغتين ---
 def get_greeting():
     hour = datetime.now().hour
-    if 5 <= hour < 12: return "Good Morning! ☀️ Ready to win today?"
-    elif 12 <= hour < 17: return "Good Afternoon! 🚀 Keep up the energy!"
-    elif 17 <= hour < 21: return "Good Evening! 🌆 Time to wrap up your wins."
-    else: return "Late Night Productivity? 🌙 Don't forget to rest!"
+    if 5 <= hour < 12: return "Good Morning! ☀️ Ready to win today? | صباح الخير! هل أنت مستعد للنجاح اليوم؟"
+    elif 12 <= hour < 17: return "Good Afternoon! 🚀 Keep up the energy! | طاب يومك! حافظ على طاقتك!"
+    elif 17 <= hour < 21: return "Good Evening! 🌆 Time to wrap up your wins. | مساء الخير! حان وقت حصد إنجازاتك."
+    else: return "Late Night Productivity? 🌙 Don't forget to rest! | إنتاجية متأخرة؟ لا تنسَ أن ترتاح!"
 
 # --- 3. إعداد الخلفية ---
 bg_image_path = "background.jpg.jpeg"
@@ -34,52 +34,50 @@ if bin_str:
         <style>
         .stApp {{ background-image: url("data:image/jpeg;base64,{bin_str}"); background-size: cover; background-attachment: fixed; }}
         .main {{ background-color: rgba(0, 0, 0, 0.65); padding: 20px; border-radius: 15px; }}
-        h1, h2, h3, label, p, span, .stMarkdown {{ color: white !important; text-shadow: 2px 2px 5px #000; }}
+        h1, h2, h3, label, p, span, .stMarkdown {{ color: white !important; text-shadow: 2px 2px 5px #000; text-align: center; }}
         .stProgress > div > div > div > div {{ background-color: #FFD700 !important; }}
         </style>
         """, unsafe_allow_html=True)
 
 # --- 4. العنوان والتحية ---
-st.title("Organize Your Time 🌟")
-st.subheader(get_greeting())
+st.title("Organize Your Time | تنظيم وقتك 🌟")
+st.write(f"### {get_greeting()}")
 
 # --- 5. شريط الإنجاز ---
 done_habits = sum(st.session_state.habits.values())
 progress = (done_habits / len(st.session_state.habits))
-st.write(f"Daily Progress: {int(progress * 100)}%")
+st.write(f"**Daily Progress | مستوى الإنجاز اليومي:** {int(progress * 100)}%")
 st.progress(progress)
 
 st.markdown("---")
 
-# --- 6. ميزة تنظيم النوم والمنبه (Sleep Planner & Alarm) ---
-with st.expander("🌙 Sleep Planner & Reminders", expanded=False):
-    st.write("Waking up refreshed depends on sleep cycles (90 mins each).")
-    wake_time = st.time_input("Set your wake-up goal:", value=datetime.strptime("07:00", "%H:%M").time())
+# --- 6. تنظيم النوم (Sleep Planner) ---
+with st.expander("🌙 Sleep Planner & Health | مخطط النوم والصحة", expanded=False):
+    st.markdown("### 😴 Why Sleep Matters | لماذا النوم مهم؟")
+    st.write("Your brain needs **8 hours** of quality sleep. | يحتاج عقلك إلى **8 ساعات** من النوم العميق.")
+    
+    st.info("💡 'A good laugh and a long sleep are the best cures.' \n\n 'الضحك الجيد والنوم الطويل هما أفضل علاج.'")
+    
+    wake_time = st.time_input("Wake-up goal | وقت الاستيقاظ:", value=datetime.strptime("07:00", "%H:%M").time())
     
     col_s1, col_s2 = st.columns(2)
     with col_s1:
-        if st.button("Calculate Bedtime 🛌"):
+        if st.button("Calculate Bedtime | احسب وقت النوم 🛌"):
             wake_datetime = datetime.combine(datetime.today(), wake_time)
-            bed_6 = (wake_datetime - timedelta(hours=9)).strftime("%I:%M %p")
-            bed_5 = (wake_datetime - timedelta(hours=7, minutes=30)).strftime("%I:%M %p")
-            st.info(f"Sleep at **{bed_6}** or **{bed_5}**")
+            perfect_bedtime = (wake_datetime - timedelta(hours=8)).strftime("%I:%M %p")
+            st.success(f"Go to bed at: **{perfect_bedtime}** | نم في تمام الساعة")
     
     with col_s2:
-        if st.button("Activate Wake-up Check ⏰"):
-            st.write("Keep this tab open...")
-            while True:
-                now = datetime.now().time().strftime("%H:%M")
-                target = wake_time.strftime("%H:%M")
-                if now == target:
-                    st.warning("⏰ TIME TO WAKE UP!")
-                    st.balloons()
-                    break
-                time.sleep(30)
+        if st.button("Sleep Tip | نصيحة للنوم ✨"):
+            tips = ["No screens 30m before bed | اترك الهاتف قبل النوم بـ30 دقيقة", 
+                    "Cool & dark room | غرفة باردة ومظلمة", 
+                    "No caffeine at night | لا كافيين في الليل"]
+            st.write(random.choice(tips))
 
 st.markdown("---")
 
 # --- 7. العادات اليومية ---
-st.subheader("✅ Daily Habits")
+st.subheader("✅ Daily Habits | العادات اليومية")
 cols = st.columns(len(st.session_state.habits))
 for i, (habit, done) in enumerate(st.session_state.habits.items()):
     with cols[i]:
@@ -88,27 +86,27 @@ for i, (habit, done) in enumerate(st.session_state.habits.items()):
         else:
             st.session_state.habits[habit] = False
 
-# --- 8. مؤقت التركيز والمهمات ---
-with st.expander("🕒 Focus Timer", expanded=False):
-    f_min = st.slider("Minutes:", 1, 120, 25)
-    if st.button("Start Timer"):
+# --- 8. مؤقت التركيز ---
+with st.expander("🕒 Focus Timer | مؤقت التركيز", expanded=False):
+    f_min = st.slider("Minutes | الدقائق:", 1, 120, 25)
+    if st.button("Start Timer | ابدأ المؤقت"):
         ph = st.empty()
         for t in range(f_min * 60, 0, -1):
             m, s = divmod(t, 60)
-            ph.metric("Remaining", f"{m:02d}:{s:02d}")
+            ph.metric("Remaining | المتبقي", f"{m:02d}:{s:02d}")
             time.sleep(1)
-        st.success("Focus session complete! ☕")
         st.balloons()
 
-st.subheader("📝 New Task")
+# --- 9. المهمات الجديدة ---
+st.subheader("📝 New Task | مهمة جديدة")
 c_t, c_p = st.columns([3, 1])
-t_txt = c_t.text_input("Task name:", key="t_in")
-t_prio = c_p.selectbox("Priority", ["Normal", "Urgent", "Low"])
-t_tm = st.time_input("At:", value=datetime.now().time(), key="task_time")
+t_txt = c_t.text_input("Task name | اسم المهمة:", key="t_in")
+t_prio = c_p.selectbox("Priority | الأولوية", ["Normal/عادي", "Urgent/عاجل", "Low/بسيط"])
+t_tm = st.time_input("At | في وقت:", value=datetime.now().time())
 
-if st.button("Save Task 🚀"):
+if st.button("Save Task | حفظ المهمة 🚀"):
     if t_txt:
-        p_em = "🔴" if t_prio == "Urgent" else "⚪" if t_prio == "Normal" else "🔵"
+        p_em = "🔴" if "Urgent" in t_prio else "⚪" if "Normal" in t_prio else "🔵"
         st.session_state.my_tasks.append({"task": t_txt, "time": t_tm.strftime("%I:%M %p"), "prio": f"{p_em} {t_prio}"})
         st.rerun()
 
@@ -121,9 +119,10 @@ for idx, item in enumerate(st.session_state.my_tasks):
             st.rerun()
 
 st.markdown("---")
-st.subheader("🏆 Daily Achievements")
-ach = st.text_input("Proud of:", key="ach_in")
-if st.button("Record"):
+# --- 10. الإنجازات ---
+st.subheader("🏆 Achievements | الإنجازات اليومية")
+ach = st.text_input("I am proud of | أنا فخور بـ:", key="ach_in")
+if st.button("Record | تسجيل"):
     if ach:
         st.session_state.achievements.append(f"⭐ {ach} ({datetime.now().strftime('%H:%M')})")
         st.rerun()
