@@ -21,7 +21,7 @@ def get_greeting():
     elif 17 <= hour < 21: return "Good Evening! 🌆 Time to wrap up your wins. | مساء الخير! حان وقت حصد إنجازاتك."
     else: return "Late Night Productivity? 🌙 Don't forget to rest! | إنتاجية متأخرة؟ لا تنسَ أن ترتاح!"
 
-# --- 3. إعداد الخلفية ---
+# --- 3. إعداد الخلفية والتنسيق ---
 bg_image_path = "background.jpg.jpeg"
 def get_base64(file_path):
     if os.path.exists(file_path):
@@ -36,7 +36,7 @@ if bin_str:
         .main {{ background-color: rgba(0, 0, 0, 0.65); padding: 20px; border-radius: 15px; }}
         h1, h2, h3, label, p, span, .stMarkdown {{ color: white !important; text-shadow: 2px 2px 5px #000; text-align: center; }}
         .stProgress > div > div > div > div {{ background-color: #FFD700 !important; }}
-        .footer {{ position: relative; left: 0; bottom: 0; width: 100%; text-align: center; color: white; padding: 20px; font-size: 14px; text-shadow: 1px 1px 3px #000; border-top: 1px solid rgba(255,255,255,0.2); margin-top: 50px; }}
+        .footer {{ position: relative; width: 100%; text-align: center; color: white; padding: 25px; font-size: 15px; text-shadow: 1px 1px 3px #000; border-top: 1px solid rgba(255,255,255,0.2); margin-top: 50px; background-color: rgba(0,0,0,0.3); border-radius: 10px; }}
         </style>
         """, unsafe_allow_html=True)
 
@@ -139,10 +139,13 @@ if st.button("Record | تسجيل"):
         st.rerun()
 for a in reversed(st.session_state.achievements): st.write(a)
 
-# --- 11. التوقيع (The Footer) ---
+# --- 11. التوقيع والرسالة التحفيزية (The Footer) ---
 st.markdown(f"""
     <div class="footer">
-        Designed by <b>Moutasem</b> for a more productive and energetic life.<br>
-        صمم من قبل <b>معتصم</b> لحياة أكثر إنجازاً وحيوية.
+        Designed by <b>Moutasem</b>. This app is built for your daily tasks—to wake up every day, set your goals, and win. 
+        I am 100% sure you are capable of completing all your tasks! <b>Stay Strong! 💪⚡</b>
+        <br><br>
+        صمم هذا التطبيق من قبل <b>معتصم</b> للمهام اليومية؛ لتبدأ يومك بتحديد أهدافك وتحقيق الانتصارات.
+        أنا متأكد تماماً أنك قادر على استكمال كل مهامك! <b>خليك قوي! 💪⚡</b>
     </div>
     """, unsafe_allow_html=True)
