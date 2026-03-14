@@ -1,19 +1,17 @@
 import streamlit as st
-import sqlite3
 from datetime import datetime
 import os
 import base64
 
-# --- 1. حل مشكلة الوقت (قاعدة بيانات جديدة لضمان الدقة) ---
-conn = sqlite3.connect('moutasem_v12.db', check_same_thread=False)
-c = conn.cursor()
-c.execute('CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, task TEXT, time TEXT)')
-conn.commit()
-
-# --- 2. إعداد الخلفية (الاسم مطابق لـ GitHub) ---
-bg_image_path = "background.jpg.jpeg"
-
+# --- 1. إعدادات الصفحة والخصوصية ---
 st.set_page_config(page_title="Organize Your Time", page_icon="🌟")
+
+# استخدام Session State بدلاً من قاعدة البيانات لضمان الخصوصية
+if 'my_tasks' not in st.session_state:
+    st.session_state.my_tasks = []
+
+# --- 2. إعداد الخلفية (background.jpg.jpeg) ---
+bg_image_path = "background.jpg.jpeg"
 
 def get_base64(file_path):
     with open(file_path, "rb") as f:
@@ -42,38 +40,35 @@ if os.path.exists(bg_image_path):
         </style>
         """, unsafe_allow_html=True)
 
-# --- 3. الاسم الجديد بالإنجليزية ---
+# --- 3. واجهة التطبيق بالإنجليزية ---
 st.title("Organize Your Time with Moutasem 🌟")
 
 with st.container():
-    t_text = st.text_input("What is the new task?", key="input_task")
-    
-    # اختيار الوقت مع مفتاح ثابت لضمان حفظ القيمة المختارة
-    t_time = st.time_input("Set completion time:", value=datetime.now().time(), key="input_time")
+    t_text = st.text_input("What is the new task?", key="task_input")
+    t_time = st.time_input("Set completion time:", value=datetime.now().time(), key="time_input")
     
     if st.button("Save Task 🌟"):
         if t_text:
-            # تحويل الوقت المختار (مهما كان) إلى نص AM/PM
             formatted_time = t_time.strftime("%I:%M %p")
-            c.execute("INSERT INTO tasks (task, time) VALUES (?, ?)", (t_text, formatted_time))
-            conn.commit()
+            # إضافة المهمة لذاكرة الجلسة الحالية فقط
+            st.session_state.my_tasks.append({
+                "task": t_text,
+                "time": formatted_time
+            })
             st.rerun()
 
-# --- 4. عرض المهام ---
+# --- 4. عرض المهام الخاصة بكل مستخدم ---
 st.markdown("---")
-c.execute("SELECT * FROM tasks")
-rows = c.fetchall()
+st.subheader("My Private Tasks")
 
-if not rows:
-    st.info("Your list is empty. Add a task and set its time!")
+if not st.session_state.my_tasks:
+    st.info("Your private list is empty. No one else can see your tasks!")
 else:
-    for row in rows:
+    for index, item in enumerate(st.session_state.my_tasks):
         col1, col2 = st.columns([5, 1])
         with col1:
-            # عرض الوقت المخزن في قاعدة البيانات
-            st.markdown(f"✅ **{row[1]}** | ⏰ {row[2]}")
+            st.markdown(f"✅ **{item['task']}** | ⏰ {item['time']}")
         with col2:
-            if st.button("🗑️", key=f"del_{row[0]}"):
-                c.execute("DELETE FROM tasks WHERE id=?", (row[0],))
-                conn.commit()
+            if st.button("🗑️", key=f"del_{index}"):
+                st.session_state.my_tasks.pop(index)
                 st.rerun()
