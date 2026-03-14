@@ -3,14 +3,19 @@ from datetime import datetime
 import os
 import base64
 
-# --- 1. إعدادات الصفحة والخصوصية ---
-st.set_page_config(page_title="Organize Your Time", page_icon="🌟")
+# --- 1. إعدادات تجعل الموقع يتصرف كتطبيق موبايل ---
+st.set_page_config(
+    page_title="Organize Your Time",
+    page_icon="🌟",
+    layout="centered",
+    initial_sidebar_state="collapsed"
+)
 
-# استخدام Session State بدلاً من قاعدة البيانات لضمان الخصوصية
+# ميزة الخصوصية (Session State)
 if 'my_tasks' not in st.session_state:
     st.session_state.my_tasks = []
 
-# --- 2. إعداد الخلفية (background.jpg.jpeg) ---
+# --- 2. إعداد الخلفية ---
 bg_image_path = "background.jpg.jpeg"
 
 def get_base64(file_path):
@@ -22,6 +27,11 @@ if os.path.exists(bg_image_path):
     bin_str = get_base64(bg_image_path)
     st.markdown(f"""
         <style>
+        /* إخفاء شريط Streamlit العلوي ليعطي شعور التطبيق الحقيقي */
+        #MainMenu {{visibility: hidden;}}
+        footer {{visibility: hidden;}}
+        header {{visibility: hidden;}}
+        
         .stApp {{
             background-image: url("data:image/jpeg;base64,{bin_str}");
             background-size: cover;
@@ -30,45 +40,50 @@ if os.path.exists(bg_image_path):
         }}
         .main {{
             background-color: rgba(0, 0, 0, 0.5);
-            padding: 25px;
+            padding: 20px;
             border-radius: 15px;
         }}
-        h1, label, p, .stMarkdown {{
+        /* تحسين مظهر الخطوط في الموبايل */
+        h1 {{
+            font-size: 24px !important;
+            text-align: center;
             color: white !important;
             text-shadow: 2px 2px 5px #000;
+        }}
+        label, p, .stMarkdown {{
+            color: white !important;
+            text-shadow: 1px 1px 3px #000;
         }}
         </style>
         """, unsafe_allow_html=True)
 
-# --- 3. واجهة التطبيق بالإنجليزية ---
+# --- 3. واجهة التطبيق ---
 st.title("Organize Your Time with Moutasem 🌟")
 
-with st.container():
-    t_text = st.text_input("What is the new task?", key="task_input")
-    t_time = st.time_input("Set completion time:", value=datetime.now().time(), key="time_input")
-    
-    if st.button("Save Task 🌟"):
-        if t_text:
-            formatted_time = t_time.strftime("%I:%M %p")
-            # إضافة المهمة لذاكرة الجلسة الحالية فقط
-            st.session_state.my_tasks.append({
-                "task": t_text,
-                "time": formatted_time
-            })
-            st.rerun()
+# نستخدم columns لجعل الشكل متناسق في شاشة الموبايل
+t_text = st.text_input("What is the new task?", placeholder="Enter task name...")
+t_time = st.time_input("Set time:", value=datetime.now().time())
 
-# --- 4. عرض المهام الخاصة بكل مستخدم ---
+if st.button("Save Task 🌟", use_container_width=True):
+    if t_text:
+        formatted_time = t_time.strftime("%I:%M %p")
+        st.session_state.my_tasks.append({
+            "task": t_text,
+            "time": formatted_time
+        })
+        st.rerun()
+
+# --- 4. عرض المهام ---
 st.markdown("---")
-st.subheader("My Private Tasks")
-
 if not st.session_state.my_tasks:
-    st.info("Your private list is empty. No one else can see your tasks!")
+    st.info("Your private list is empty.")
 else:
     for index, item in enumerate(st.session_state.my_tasks):
-        col1, col2 = st.columns([5, 1])
-        with col1:
-            st.markdown(f"✅ **{item['task']}** | ⏰ {item['time']}")
-        with col2:
-            if st.button("🗑️", key=f"del_{index}"):
-                st.session_state.my_tasks.pop(index)
-                st.rerun()
+        with st.container():
+            col1, col2 = st.columns([4, 1])
+            with col1:
+                st.markdown(f"✅ **{item['task']}**\n\n⏰ {item['time']}")
+            with col2:
+                if st.button("🗑️", key=f"del_{index}"):
+                    st.session_state.my_tasks.pop(index)
+                    st.rerun()
