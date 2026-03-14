@@ -3,39 +3,17 @@ import sqlite3
 from datetime import datetime
 
 # --- 1. إعداد قاعدة البيانات ---
-def init_db():
-    conn = sqlite3.connect('moutasem_data.db', check_same_thread=False)
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS tasks
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                  content TEXT, 
-                  time TEXT, 
-                  is_done BOOLEAN)''')
-    conn.commit()
-    conn.close()
+# نستخدم اسم ملف جديد لضمان تحديث البيانات بشكل نظيف
+conn = sqlite3.connect('moutasem_v2.db', check_same_thread=False)
+c = conn.cursor()
+c.execute('CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, task TEXT, time TEXT)')
+conn.commit()
 
-def add_task(content, task_time):
-    conn = sqlite3.connect('moutasem_data.db', check_same_thread=False)
-    c = conn.cursor()
-    time_str = task_time.strftime("%I:%M %p")
-    c.execute("INSERT INTO tasks (content, time, is_done) VALUES (?, ?, ?)", (content, time_str, False))
-    conn.commit()
-    conn.close()
+# --- 2. إعداد واجهة المستخدم وصورة الخلفية ---
+# رابط مباشر لصورة الورود التي طلبتها
+img_url = "https://w0.peakpx.com/wallpaper/447/844/HD-wallpaper-woman-holding-roses-flowers-bouquets-red-lips.jpg"
 
-def delete_task(t_id):
-    conn = sqlite3.connect('moutasem_data.db', check_same_thread=False)
-    c = conn.cursor()
-    c.execute("DELETE FROM tasks WHERE id = ?", (t_id,))
-    conn.commit()
-    conn.close()
-
-# --- 2. إعدادات الواجهة ---
-st.set_page_config(page_title="Moutasem App", page_icon="🌹", layout="centered")
-init_db()
-
-# --- 3. تصميم الواجهة بالصورة الجديدة ---
-# ملاحظة: استخدمت رابطاً لصورة تشبه صورتك لضمان الظهور على الإنترنت
-img_url = "https://images.unsplash.com/photo-1550005817-06830d1d61ce?q=80&w=1000&auto=format&fit=crop"
+st.set_page_config(page_title="Moutasem App", page_icon="🌹")
 
 st.markdown(f"""
     <style>
@@ -45,76 +23,66 @@ st.markdown(f"""
         background-position: center;
         background-attachment: fixed;
     }}
-    
-    /* جعل النصوص والبطاقات واضحة فوق الصورة */
+    /* طبقة تعتيم لجعل النصوص واضحة جداً */
     .main {{
-        background-color: rgba(0, 0, 0, 0.4); /* طبقة تعتيم خفيفة */
-        padding: 20px;
+        background-color: rgba(0, 0, 0, 0.5);
+        padding: 30px;
         border-radius: 15px;
     }}
-    
-    h1, p, label, .stMarkdown {{
+    h1, label, p, .stMarkdown {{
         color: white !important;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.7); /* ظل للنصوص */
+        text-shadow: 2px 2px 5px rgba(0,0,0,0.9);
     }}
-
-    .stButton>button {{
-        background-color: #ff4b4b;
-        color: white;
-        border-radius: 10px;
-        border: none;
-        font-weight: bold;
-    }}
-
-    /* تصميم البطاقات للمهام */
-    .task-card {{
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(10px); /* تأثير الزجاج الضبابي */
+    /* تنسيق صندوق المهام */
+    .task-box {{
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
         padding: 15px;
         border-radius: 10px;
         border: 1px solid rgba(255, 255, 255, 0.2);
         margin-bottom: 10px;
+        color: white;
     }}
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🌹 تطبيق Moutasem الذكي")
-st.write(f"اليوم: {datetime.now().strftime('%Y-%m-%d')}")
+st.title("🌹 تطبيق معتصم الذكي")
+st.write("نظّم مهامك بلمسة فنية")
 
-# --- 4. إضافة مهمة جديدة ---
-with st.expander("✨ أضف مهمة جديدة الآن", expanded=True):
-    task_text = st.text_input("ما هي مهمتك القادمة؟", placeholder="اكتب هنا...")
-    task_time = st.time_input("التوقيت المفترض:", datetime.now().time())
+# --- 3. إضافة مهمة جديدة ---
+with st.container():
+    t_text = st.text_input("ما هي المهمة؟", placeholder="اكتب هنا...")
+    t_time = st.time_input("اختر الوقت:", datetime.now().time())
     
-    if st.button("إضافة للقائمة"):
-        if task_text:
-            add_task(task_text, task_time)
+    if st.button("إضافة المهمة للقائمة ✨"):
+        if t_text:
+            # الحل النهائي لمشكلة الوقت: تحويله لنص قبل الحفظ
+            formatted_time = t_time.strftime("%I:%M %p")
+            c.execute("INSERT INTO tasks (task, time) VALUES (?, ?)", (t_text, formatted_time))
+            conn.commit()
             st.rerun()
 
-# --- 5. عرض المهام ---
-st.divider()
-conn = sqlite3.connect('moutasem_data.db', check_same_thread=False)
-c = conn.cursor()
+# --- 4. عرض المهام المضافة ---
+st.markdown("---")
 c.execute("SELECT * FROM tasks")
 tasks = c.fetchall()
-conn.close()
 
 if not tasks:
-    st.info("القائمة فارغة، ابدأ بإضافة مهامك!")
+    st.info("لا توجد مهام حالياً. ابدأ بإضافة أول مهمة!")
 else:
-    for task in tasks:
-        t_id, t_content, t_time, t_status = task
-        st.markdown(f"""
-        <div class="task-card">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <span style="font-size: 18px; font-weight: bold; color: white;">{t_content}</span><br>
-                    <span style="font-size: 14px; color: #ddd;">⏰ {t_time}</span>
+    for row in tasks:
+        with st.container():
+            col1, col2 = st.columns([5, 1])
+            with col1:
+                st.markdown(f"""
+                <div class="task-box">
+                    <strong>{row[1]}</strong><br>
+                    <small>⏰ {row[2]}</small>
                 </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        # زر الحذف نضعه خارج الـ Markdown ليعمل برمجياً
-        if st.button(f"إلغاء المهمة 🗑️", key=f"del_{t_id}"):
-            delete_task(t_id)
-            st.rerun()
+                """, unsafe_allow_html=True)
+            with col2:
+                # زر الحذف
+                if st.button("🗑️", key=f"del_{row[0]}"):
+                    c.execute("DELETE FROM tasks WHERE id=?", (row[0],))
+                    conn.commit()
+                    st.rerun()
