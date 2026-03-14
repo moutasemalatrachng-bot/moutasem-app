@@ -51,32 +51,49 @@ st.progress(progress)
 
 st.markdown("---")
 
-# --- 6. تنظيم النوم (Sleep Planner) ---
+# --- 6. ميزة تعلم اللغات الجديدة (Language Learning) ---
+with st.expander("🌍 Language Learning | تعلم اللغات", expanded=False):
+    st.write("Keep expanding your horizons! | استمر في توسيع آفاقك!")
+    
+    col_lang, col_duration = st.columns(2)
+    
+    with col_lang:
+        lang_choice = st.selectbox(
+            "Which language are you learning? | ما اللغة التي تتعلمها؟",
+            ["English / الإنجليزية", "Chinese / الصينية", "Spanish / الإسبانية", "German / الألمانية"]
+        )
+    
+    with col_duration:
+        # وقت حر حسب رغبة المستخدم
+        learn_time = st.number_input("Study duration (minutes) | مدة الدراسة (بالدقائق):", min_value=1, max_value=480, value=30)
+
+    if st.button("Start Learning Session | ابدأ جلسة التعلم 📚"):
+        st.write(f"Focusing on **{lang_choice}** for **{learn_time}** minutes... 🔥")
+        ph_lang = st.empty()
+        for t in range(learn_time * 60, 0, -1):
+            m, s = divmod(t, 60)
+            ph_lang.metric("Study Time Remaining | الوقت المتبقي للدراسة", f"{m:02d}:{s:02d}")
+            time.sleep(1)
+        st.success(f"Great job learning {lang_choice}! | عمل رائع في تعلم {lang_choice}! 🎉")
+        st.balloons()
+
+st.markdown("---")
+
+# --- 7. تنظيم النوم (Sleep Planner) ---
 with st.expander("🌙 Sleep Planner & Health | مخطط النوم والصحة", expanded=False):
     st.markdown("### 😴 Why Sleep Matters | لماذا النوم مهم؟")
     st.write("Your brain needs **8 hours** of quality sleep. | يحتاج عقلك إلى **8 ساعات** من النوم العميق.")
     
-    st.info("💡 'A good laugh and a long sleep are the best cures.' \n\n 'الضحك الجيد والنوم الطويل هما أفضل علاج.'")
+    wake_time = st.time_input("Wake-up goal | وقت الاستيقاظ:", value=datetime.strptime("07:00", "%H:%M").time(), key="wake_p")
     
-    wake_time = st.time_input("Wake-up goal | وقت الاستيقاظ:", value=datetime.strptime("07:00", "%H:%M").time())
-    
-    col_s1, col_s2 = st.columns(2)
-    with col_s1:
-        if st.button("Calculate Bedtime | احسب وقت النوم 🛌"):
-            wake_datetime = datetime.combine(datetime.today(), wake_time)
-            perfect_bedtime = (wake_datetime - timedelta(hours=8)).strftime("%I:%M %p")
-            st.success(f"Go to bed at: **{perfect_bedtime}** | نم في تمام الساعة")
-    
-    with col_s2:
-        if st.button("Sleep Tip | نصيحة للنوم ✨"):
-            tips = ["No screens 30m before bed | اترك الهاتف قبل النوم بـ30 دقيقة", 
-                    "Cool & dark room | غرفة باردة ومظلمة", 
-                    "No caffeine at night | لا كافيين في الليل"]
-            st.write(random.choice(tips))
+    if st.button("Calculate Bedtime | احسب وقت النوم 🛌"):
+        wake_datetime = datetime.combine(datetime.today(), wake_time)
+        perfect_bedtime = (wake_datetime - timedelta(hours=8)).strftime("%I:%M %p")
+        st.success(f"To get 8 hours, go to bed at: **{perfect_bedtime}** | للحصول على 8 ساعات، نم في تمام الساعة")
 
 st.markdown("---")
 
-# --- 7. العادات اليومية ---
+# --- 8. العادات اليومية ---
 st.subheader("✅ Daily Habits | العادات اليومية")
 cols = st.columns(len(st.session_state.habits))
 for i, (habit, done) in enumerate(st.session_state.habits.items()):
@@ -86,10 +103,10 @@ for i, (habit, done) in enumerate(st.session_state.habits.items()):
         else:
             st.session_state.habits[habit] = False
 
-# --- 8. مؤقت التركيز ---
-with st.expander("🕒 Focus Timer | مؤقت التركيز", expanded=False):
-    f_min = st.slider("Minutes | الدقائق:", 1, 120, 25)
-    if st.button("Start Timer | ابدأ المؤقت"):
+# --- 9. مؤقت التركيز العام ---
+with st.expander("🕒 General Focus Timer | مؤقت التركيز العام", expanded=False):
+    f_min = st.slider("Minutes | الدقائق:", 1, 120, 25, key="gen_timer")
+    if st.button("Start Timer | ابدأ المؤقت", key="gen_btn"):
         ph = st.empty()
         for t in range(f_min * 60, 0, -1):
             m, s = divmod(t, 60)
@@ -97,12 +114,12 @@ with st.expander("🕒 Focus Timer | مؤقت التركيز", expanded=False):
             time.sleep(1)
         st.balloons()
 
-# --- 9. المهمات الجديدة ---
+# --- 10. المهمات الجديدة ---
 st.subheader("📝 New Task | مهمة جديدة")
 c_t, c_p = st.columns([3, 1])
 t_txt = c_t.text_input("Task name | اسم المهمة:", key="t_in")
 t_prio = c_p.selectbox("Priority | الأولوية", ["Normal/عادي", "Urgent/عاجل", "Low/بسيط"])
-t_tm = st.time_input("At | في وقت:", value=datetime.now().time())
+t_tm = st.time_input("At | في وقت:", value=datetime.now().time(), key="t_tm_input")
 
 if st.button("Save Task | حفظ المهمة 🚀"):
     if t_txt:
@@ -119,7 +136,7 @@ for idx, item in enumerate(st.session_state.my_tasks):
             st.rerun()
 
 st.markdown("---")
-# --- 10. الإنجازات ---
+# --- 11. الإنجازات ---
 st.subheader("🏆 Achievements | الإنجازات اليومية")
 ach = st.text_input("I am proud of | أنا فخور بـ:", key="ach_in")
 if st.button("Record | تسجيل"):
