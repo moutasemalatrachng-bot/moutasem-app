@@ -2,72 +2,84 @@ import streamlit as st
 from datetime import datetime
 import os
 import base64
+import time
 
-# --- 1. إعدادات الصفحة الأساسية ---
-st.set_page_config(page_title="Organize Your Time", page_icon="🌟")
+# --- 1. الإعدادات والخصوصية ---
+st.set_page_config(page_title="Organize Your Time", page_icon="🌟", layout="centered")
 
-# ذاكرة المهام (منفصلة لكل مستخدم)
-if 'my_tasks' not in st.session_state:
-    st.session_state.my_tasks = []
+if 'my_tasks' not in st.session_state: st.session_state.my_tasks = []
+if 'achievements' not in st.session_state: st.session_state.achievements = []
 
-# --- 2. إعداد الخلفية (استخدام الصورة المرفوعة) ---
+# --- 2. الخلفية ---
 bg_image_path = "background.jpg.jpeg"
-
 def get_base64(file_path):
-    with open(file_path, "rb") as f:
-        data = f.read()
-    return base64.b64encode(data).decode()
+    if os.path.exists(file_path):
+        with open(file_path, "rb") as f: return base64.b64encode(f.read()).decode()
+    return None
 
-if os.path.exists(bg_image_path):
-    bin_str = get_base64(bg_image_path)
+bin_str = get_base64(bg_image_path)
+if bin_str:
     st.markdown(f"""
         <style>
-        .stApp {{
-            background-image: url("data:image/jpeg;base64,{bin_str}");
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-        }}
-        .main {{
-            background-color: rgba(0, 0, 0, 0.5);
-            padding: 20px;
-            border-radius: 15px;
-        }}
-        h1, label, p, .stMarkdown {{
-            color: white !important;
-            text-shadow: 2px 2px 5px #000;
-        }}
+        .stApp {{ background-image: url("data:image/jpeg;base64,{bin_str}"); background-size: cover; background-attachment: fixed; }}
+        .main {{ background-color: rgba(0, 0, 0, 0.6); padding: 20px; border-radius: 15px; }}
+        h1, h2, h3, label, p, .stMarkdown {{ color: white !important; text-shadow: 2px 2px 5px #000; }}
+        .stButton>button {{ width: 100%; border-radius: 10px; }}
         </style>
         """, unsafe_allow_html=True)
 
-# --- 3. واجهة التطبيق ---
 st.title("Organize Your Time with Moutasem 🌟")
 
-# إدخال المهمة والوقت
-t_text = st.text_input("What is the new task?", key="task_input")
-t_time = st.time_input("Set completion time:", value=datetime.now().time(), key="time_picker")
+# --- 3. قسم مؤقت التركيز (Focus Timer) ---
+with st.expander("🕒 Focus Timer (Pomodoro)", expanded=False):
+    st.write("Concentrate for 25 minutes")
+    if st.button("Start 25 min Focus Session"):
+        ph = st.empty()
+        for t in range(25 * 60, 0, -1):
+            mins, secs = divmod(t, 60)
+            ph.metric("Remaining Time", f"{mins:02d}:{secs:02d}")
+            time.sleep(1)
+        st.success("Time's up! Take a break. ☕")
 
-if st.button("Save Task 🌟", use_container_width=True):
+st.markdown("---")
+
+# --- 4. إضافة مهمة مع تحديد الأولوية (Priority Matrix) ---
+col_t, col_p = st.columns([3, 1])
+with col_t:
+    t_text = st.text_input("What's the task?", key="t_in")
+with col_p:
+    t_prio = st.selectbox("Priority", ["Normal", "Urgent", "Low"])
+
+t_time = st.time_input("Set time:", value=datetime.now().time())
+
+if st.button("Add Task to My List 🚀"):
     if t_text:
-        # التقاط الوقت المختار لحظة الضغط على الزر
-        formatted_time = t_time.strftime("%I:%M %p")
+        p_color = "🔴" if t_prio == "Urgent" else "⚪" if t_prio == "Normal" else "🔵"
         st.session_state.my_tasks.append({
             "task": t_text,
-            "time": formatted_time
+            "time": t_time.strftime("%I:%M %p"),
+            "prio": f"{p_color} {t_prio}"
         })
         st.rerun()
 
-# --- 4. عرض المهام ---
+# عرض المهام
+for idx, item in enumerate(st.session_state.my_tasks):
+    with st.container():
+        c1, c2 = st.columns([5, 1])
+        c1.markdown(f"{item['prio']} **{item['task']}** | ⏰ {item['time']}")
+        if c2.button("🗑️", key=f"del_{idx}"):
+            st.session_state.my_tasks.pop(idx)
+            st.rerun()
+
 st.markdown("---")
-if not st.session_state.my_tasks:
-    st.info("Your private list is empty. Add a task!")
-else:
-    for index, item in enumerate(st.session_state.my_tasks):
-        with st.container():
-            col1, col2 = st.columns([5, 1])
-            with col1:
-                st.markdown(f"✅ **{item['task']}** | ⏰ {item['time']}")
-            with col2:
-                if st.button("🗑️", key=f"del_{index}"):
-                    st.session_state.my_tasks.pop(index)
-                    st.rerun()
+
+# --- 5. مفكرة الإنجازات (Achievement Diary) ---
+st.subheader("🏆 Daily Achievements")
+ach_in = st.text_input("Write something you're proud of today:", key="ach_in")
+if st.button("Record Achievement"):
+    if ach_in:
+        st.session_state.achievements.append(f"⭐ {ach_in} ({datetime.now().strftime('%H:%M')})")
+        st.rerun()
+
+for a in reversed(st.session_state.achievements):
+    st.write(a)
